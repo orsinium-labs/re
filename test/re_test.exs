@@ -16,6 +16,9 @@ defmodule ReTest do
   describe "text" do
     test "explict string" do
       assert "hello?" |> Re.text() |> Re.to_string() == ~S"hello\?"
+      assert ?h |> Re.text() |> Re.to_string() == "h"
+      assert ?h |> Re.text() |> Re.group() |> Re.to_string() == "h"
+      assert "h" |> Re.text() |> Re.group() |> Re.to_string() == "h"
     end
 
     test "explict string is statically expanded" do
@@ -26,12 +29,28 @@ defmodule ReTest do
 
   describe "any_of" do
     test "explict list" do
-      assert ["a", "b"] |> Re.any_of() |> Re.to_string() == "a|b"
+      assert ["a", "b"] |> Re.any_of() |> Re.to_string() == "[ab]"
+      assert 'abcd' |> Re.any_of() |> Re.to_string() == "[abcd]"
+      assert ["a", "b", "c", "d"] |> Re.any_of() |> Re.to_string() == "[abcd]"
+      assert ["ab", "cd"] |> Re.any_of() |> Re.to_string() == "ab|cd"
+      assert ["ab", "cd", "ef"] |> Re.any_of() |> Re.to_string() == "ab|cd|ef"
     end
 
     test "explict list is statically expanded" do
       ast = quote do: ["a", "b"] |> Re.any_of() |> Re.to_string()
-      assert Macro.expand(ast, __ENV__) == "a|b"
+      assert Macro.expand(ast, __ENV__) == "[ab]"
+    end
+  end
+
+  describe "none_of" do
+    test "explict list" do
+      assert 'ab' |> Re.none_of() |> Re.to_string() == "[^ab]"
+      assert 'abcd' |> Re.none_of() |> Re.to_string() == "[^abcd]"
+    end
+
+    test "explict list is statically expanded" do
+      ast = quote do: 'ab' |> Re.none_of() |> Re.to_string()
+      assert Macro.expand(ast, __ENV__) == "[^ab]"
     end
   end
 
@@ -43,13 +62,16 @@ defmodule ReTest do
 
   describe "zero_or_more" do
     test "explict string" do
-      assert "a" |> Re.zero_or_more() |> Re.to_string() == "a*"
+      assert ?a |> Re.zero_or_more() |> Re.to_string() == "a*"
+      assert "abc" |> Re.zero_or_more() |> Re.to_string() == "(?:abc)*"
+      assert 'abc' |> Re.any_of() |> Re.zero_or_more() |> Re.to_string() == "[abc]*"
     end
   end
 
   describe "maybe" do
     test "explict string" do
-      assert "a" |> Re.maybe() |> Re.to_string() == "a?"
+      assert ?a |> Re.maybe() |> Re.to_string() == "a?"
+      assert "abc" |> Re.maybe() |> Re.to_string() == "(?:abc)?"
     end
   end
 
@@ -62,22 +84,24 @@ defmodule ReTest do
 
   describe "group" do
     test "explict string" do
-      assert "a" |> Re.group() |> Re.to_string() == "(?:a)"
+      assert "a" |> Re.group() |> Re.to_string() == "a"
+      assert ?a |> Re.group() |> Re.to_string() == "a"
+      assert "abc" |> Re.group() |> Re.to_string() == "(?:abc)"
     end
 
     test "explict string is statically expanded" do
-      ast = quote do: Re.to_string(Re.group("a"))
-      assert Macro.expand(ast, __ENV__) == "(?:a)"
+      ast = quote do: Re.to_string(Re.group("abc"))
+      assert Macro.expand(ast, __ENV__) == "(?:abc)"
     end
 
     test "explict string with pipes is statically expanded" do
-      ast = quote do: "a" |> Re.group() |> Re.to_string()
-      assert Macro.expand(ast, __ENV__) == "(?:a)"
+      ast = quote do: "abc" |> Re.group() |> Re.to_string()
+      assert Macro.expand(ast, __ENV__) == "(?:abc)"
     end
 
     test "variable" do
-      var = "a"
-      assert Re.group(var) |> Re.to_string() == "(?:a)"
+      var = "abc"
+      assert Re.group(var) |> Re.to_string() == "(?:abc)"
     end
   end
 
@@ -90,7 +114,7 @@ defmodule ReTest do
 
   describe "lazy" do
     test "explict string" do
-      assert "a" |> Re.one_or_more() |> Re.lazy() |> Re.to_string() == "a+?"
+      assert ?a |> Re.one_or_more() |> Re.lazy() |> Re.to_string() == "a+?"
     end
   end
 end
