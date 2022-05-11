@@ -2,13 +2,17 @@ defmodule ReTest do
   use ExUnit.Case
   doctest Re
 
-  describe "literal" do
+  describe "raw" do
     test "explict string" do
-      assert "hello?" |> Re.literal() |> Re.to_string() == "hello?"
+      assert "hello?" |> Re.raw() |> Re.to_string() == "hello?"
+    end
+
+    test "explict Regex" do
+      assert ~r"hello?" |> Re.raw() |> Re.to_string() == "hello?"
     end
 
     test "explict string is statically expanded" do
-      ast = quote do: "hello?" |> Re.literal() |> Re.to_string()
+      ast = quote do: "hello?" |> Re.raw() |> Re.to_string()
       assert Macro.expand(ast, __ENV__) == "hello?"
     end
   end
@@ -68,10 +72,10 @@ defmodule ReTest do
     end
   end
 
-  describe "maybe" do
+  describe "optional" do
     test "explict string" do
-      assert ?a |> Re.maybe() |> Re.to_string() == "a?"
-      assert "abc" |> Re.maybe() |> Re.to_string() == "(?:abc)?"
+      assert ?a |> Re.optional() |> Re.to_string() == "a?"
+      assert "abc" |> Re.optional() |> Re.to_string() == "(?:abc)?"
     end
   end
 

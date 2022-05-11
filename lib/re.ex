@@ -16,6 +16,7 @@ defmodule Re do
            when is_tuple(v) and tuple_size(v) == 2 and
                   (elem(v, 0) == :re_expr or elem(v, 0) == :re_group)
 
+  # Internal macros that evaluates quoted expression if all params are static literals.
   defmacrop eager(params, do: block) do
     quote do
       if Macro.quoted_literal?(unquote(params)) do
@@ -53,6 +54,8 @@ defmodule Re do
   @doc """
   Compile Re AST (or string) into native Regex type.
 
+  The result can be used with any functions from the Regex module.
+
   https://hexdocs.pm/elixir/1.13/Regex.html#compile!/2
   """
   @spec compile(re_ast() | String.t(), binary() | [term()]) :: any()
@@ -62,7 +65,7 @@ defmodule Re do
     eager [expr] do
       quote do
         require Re
-        unquote(expr) |> Re.to_string() |> Regex.compile!(unquote(options)) |> Macro.escape()
+        unquote(expr) |> Re.to_string() |> Regex.compile!(unquote(options))
       end
     end
   end
@@ -84,15 +87,150 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match the beginning of each line.
+
+  PCRE: `^`
+  """
   @spec beginning_of_line :: re_ast()
   defmacro beginning_of_line, do: {:re_group, "^"}
+
+  @doc """
+  Match the end of each line.
+
+  PCRE: `$`
+  """
   @spec end_of_line :: re_ast()
   defmacro end_of_line, do: {:re_group, "$"}
+
+  @doc """
+  Match the beginning of the whole string.
+
+  PCRE: `\\A`
+  """
+  @spec beginning_of_string :: re_ast()
+  defmacro beginning_of_string, do: {:re_group, "\A"}
+
+  @doc """
+  Match the end of the whole string.
+
+  PCRE: `\\z`
+  """
+  @spec end_of_string :: re_ast()
+  defmacro end_of_string, do: {:re_group, "\z"}
+
+  @doc """
+  Match any symbol.
+
+  PCRE: `.`
+  """
   @spec anything :: re_ast()
   defmacro anything, do: {:re_group, "."}
-  @spec literal(any) :: re_ast()
-  defmacro literal(expr), do: {:re_expr, expr}
 
+  @doc """
+  Match only space and nothing else.
+
+  PCRE: ` `.
+  """
+  @spec space :: re_ast()
+  defmacro space, do: {:re_group, " "}
+
+  @doc """
+  Match the tab symbol and nothing else.
+
+  PCRE: `\\t`.
+  """
+  @spec tab :: re_ast()
+  defmacro tab, do: {:re_group, ~S"\t"}
+
+  @doc """
+  Match decimal digit.
+
+  PCRE: `\\d`.
+  """
+  @spec any_digit :: re_ast()
+  defmacro any_digit, do: {:re_group, ~S"\d"}
+
+  @doc """
+  Match any symbol except digit.
+
+  PCRE: `\\D`.
+  """
+  @spec not_digit :: re_ast()
+  defmacro not_digit, do: {:re_group, ~S"\D"}
+
+  @doc """
+  Match any whitespace symbol like space, tab, unicode spaces etc.
+
+  PCRE: `\\s`.
+  """
+  @spec any_space :: re_ast()
+  defmacro any_space, do: {:re_group, ~S"\s"}
+
+  @doc """
+  Match any symbol except whitespace symbols.
+
+  PCRE: `\\S`.
+  """
+  @spec not_space :: re_ast()
+  defmacro not_space, do: {:re_group, ~S"\S"}
+
+  @doc """
+  Match any word symbol like letters, numbers etc.
+
+  PCRE: `\\w`.
+  """
+  @spec any_word :: re_ast()
+  defmacro any_word, do: {:re_group, ~S"\w"}
+
+  @doc """
+  Match any symbol except word symbols (letters, numbers etc).
+
+  PCRE: `\\W`.
+  """
+  @spec not_word :: re_ast()
+  defmacro not_word, do: {:re_group, ~S"\W"}
+
+  @doc """
+  Match any ASCII symbol (code points from 0 to 127).
+
+  PCRE: `[\\\\0-\\x7f]`.
+  """
+  @spec any_ascii :: re_ast()
+  defmacro any_ascii, do: {:re_group, ~S"[\\0-\x7f]"}
+
+  @doc """
+  Match any Latin-1 symbol (code points from 0 to 255).
+
+  PCRE: `[\\\\0-\\xff]`.
+  """
+  @spec any_latin1 :: re_ast()
+  defmacro any_latin1, do: {:re_group, ~S"[\\0-\xff]"}
+
+  @doc """
+  Include a raw regex as is into the resulting pattern.
+
+  Can be dangerous. Don't let untrusted users to pass values there.
+  Use `Re.text` if you need the input text to be escaped.
+  """
+  @spec raw(String.t() | Regex.t()) :: re_ast()
+  defmacro raw(expr) do
+    expr = Macro.expand(expr, __ENV__)
+
+    eager [expr] do
+      quote do
+        case unquote(expr) do
+          %Regex{} = val -> {:re_expr, Regex.source(val)}
+          val -> {:re_expr, val}
+        end
+      end
+    end
+  end
+
+  @doc """
+  Include a text into the resulting pattern.
+  All unsafe symbols will be escaped if necessary.
+  """
   @spec text(String.t() | integer()) :: re_ast()
   defmacro text(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -108,6 +246,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Chain multiple patterns together.
+
+  PCRE: `XY`
+  """
   @spec sequence([re_ast() | String.t()]) :: re_ast()
   defmacro sequence(exprs) do
     exprs = Macro.expand(exprs, __ENV__)
@@ -121,6 +264,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match any of the given patters or symbols.
+
+  PCRE: `[XY]` and `X|Y`
+  """
   @spec any_of([re_ast() | String.t()]) :: re_ast()
   defmacro any_of(exprs) do
     exprs = Macro.expand(exprs, __ENV__)
@@ -139,6 +287,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match anything except the given symbols.
+
+  PCRE: `[^XY]`
+  """
   @spec none_of(list(char())) :: re_ast()
   defmacro none_of(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -150,6 +303,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match any symbol in the given range.
+
+  PCRE: `X-Y`
+  """
   @spec in_range(char(), char()) :: re_ast()
   defmacro in_range(expr1, expr2) do
     expr1 = Macro.expand(expr1, __ENV__)
@@ -162,6 +320,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match zero or more repetitions of the pattern.
+
+  PCRE: `X*`
+  """
   @spec zero_or_more(any) :: re_ast()
   defmacro zero_or_more(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -175,6 +338,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match one or more repetitions of the pattern.
+
+  PCRE: `X+`
+  """
   @spec one_or_more(any) :: re_ast()
   defmacro one_or_more(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -188,8 +356,13 @@ defmodule Re do
     end
   end
 
-  @spec maybe(any) :: re_ast()
-  defmacro maybe(expr) do
+  @doc """
+  Match zero or one repetition of the pattern.
+
+  PCRE: `X?`
+  """
+  @spec optional(any) :: re_ast()
+  defmacro optional(expr) do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
@@ -201,6 +374,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match exactly N repetitions of the pattern.
+
+  PCRE: `X{N}`
+  """
   @spec repeated(any, any) :: re_ast()
   defmacro repeated(expr, n) do
     expr = Macro.expand(expr, __ENV__)
@@ -215,6 +393,11 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Match from at_least to at_most repetitions of the pattern.
+
+  PCRE: `X{N,M}`
+  """
   @spec repeated(any, any, any) :: re_ast()
   defmacro repeated(expr, at_least, at_most) do
     expr = Macro.expand(expr, __ENV__)
@@ -230,6 +413,13 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Capture the pattern.
+
+  https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
+
+  PCRE: `(X)`
+  """
   @spec capture(any) :: re_ast()
   defmacro capture(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -243,6 +433,13 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Named capture of the pattern.
+
+  https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
+
+  PCRE: `(?P<N>X)`
+  """
   @spec capture(any, any) :: re_ast()
   defmacro capture(expr, name) do
     expr = Macro.expand(expr, __ENV__)
@@ -257,6 +454,17 @@ defmodule Re do
     end
   end
 
+  @doc """
+  "Ungreedy" the pattern.
+
+  By default, all patterns greedy and try to match as much as possbile.
+  This function reverts this behavior for the given pattern,
+  making it match as less as possible.
+
+  https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
+
+  PCRE: `X?`
+  """
   @spec lazy(re_ast()) :: re_ast()
   defmacro lazy(expr) do
     expr = Macro.expand(expr, __ENV__)
