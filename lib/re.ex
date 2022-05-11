@@ -8,19 +8,6 @@ defmodule Re do
   # + `{:re_group, string}` for something that is already grouped
   # + a random AST for something that must be handled in runtime.
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Re.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
-
   defmacrop eager(params, do: block) do
     quote do
       if Macro.quoted_literal?(unquote(params)) do
