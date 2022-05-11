@@ -51,7 +51,7 @@ defmodule ReTest do
     # end
 
     test "explict string is statically expanded" do
-      ast = quote do: Re.group(Re.group("a"))
+      ast = quote do: Re.to_string(Re.group("a"))
       assert Macro.expand(ast, __ENV__) == "(?:a)"
     end
 
