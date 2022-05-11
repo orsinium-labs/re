@@ -1,6 +1,24 @@
 defmodule Re do
   @moduledoc """
-  Documentation for `Re`.
+  Write readable regular expressions in functional style.
+
+  ## Examples
+
+  Match subdomains of `example.com`:
+
+    iex> regex =
+    ...>   Re.sequence([
+    ...>     Re.one_or_more(Re.any_of([Re.any_ascii(), Re.any_of('.-_')])),
+    ...>     Re.text(".example.com")
+    ...>   ]) |> Re.compile()
+    ~r/(?:[\\\\0-\\x7f]|[.-_])+\\.example\\.com/
+    iex> Regex.match?(regex, "hello.example.com")
+    true
+    iex> Regex.match?(regex, "hello.world.example.com")
+    true
+    iex> Regex.match?(regex, "hello.orsinium.dev")
+    false
+
   """
 
   @typedoc """
@@ -10,6 +28,15 @@ defmodule Re do
 
   @doc """
   Guard for matching the internal Re AST representation.
+
+  ## Examples
+
+      iex> Re.is_re(Re.text("hello"))
+      true
+      iex> Re.is_re("something else")
+      false
+      iex> Re.is_re(~r"hi")
+      false
   """
   @spec is_re(any) :: any
   defguard is_re(v)
@@ -30,6 +57,13 @@ defmodule Re do
 
   @doc """
   Convert the given Re AST into a string.
+
+  ## Examples
+
+    iex> Re.to_string(Re.any_digit)
+    "\\\\d"
+    iex> Re.to_string(Re.any_ascii)
+    "[\\\\\\\\0-\\\\x7f]"
   """
   @spec to_string(re_ast() | String.t() | char()) :: String.t()
   defmacro to_string(expr) do
@@ -57,6 +91,13 @@ defmodule Re do
   The result can be used with any functions from the Regex module.
 
   https://hexdocs.pm/elixir/1.13/Regex.html#compile!/2
+
+  ## Examples
+
+    iex> "1" =~ Re.compile(Re.any_digit)
+    true
+    iex> "a" =~ Re.compile(Re.any_digit)
+    false
   """
   @spec compile(re_ast() | String.t(), binary() | [term()]) :: any()
   defmacro compile(expr, options \\ "") do
@@ -70,6 +111,19 @@ defmodule Re do
     end
   end
 
+  @doc """
+  Group (but not capture) the pattern if needed.
+
+  Usually, you don't need to call this function.
+  All other functions call this one when needed.
+
+  PCRE: `(?:X)`
+
+  ## Examples
+
+    iex> 'abc' |> Re.raw |> Re.group |> Re.to_string
+    "(?:abc)"
+  """
   @spec group(re_ast() | String.t()) :: re_ast()
   defmacro group(expr) do
     expr = Macro.expand(expr, __ENV__)
@@ -123,6 +177,14 @@ defmodule Re do
   Match any symbol.
 
   PCRE: `.`
+
+  ## Examples
+
+    iex> "a" =~ Re.compile(Re.anything)
+    true
+    iex> "?" =~ Re.compile(Re.anything)
+    true
+
   """
   @spec anything :: re_ast()
   defmacro anything, do: {:re_group, "."}
@@ -195,6 +257,16 @@ defmodule Re do
   Match any ASCII symbol (code points from 0 to 127).
 
   PCRE: `[\\\\0-\\x7f]`.
+
+  ## Examples
+
+    iex> "a" =~ Re.compile(Re.any_ascii)
+    true
+    iex> "\\x50" =~ Re.compile(Re.any_ascii)
+    true
+    iex> "\\x90" =~ Re.compile(Re.any_ascii)
+    false
+
   """
   @spec any_ascii :: re_ast()
   defmacro any_ascii, do: {:re_group, ~S"[\\0-\x7f]"}
@@ -212,6 +284,16 @@ defmodule Re do
 
   Can be dangerous. Don't let untrusted users to pass values there.
   Use `Re.text` if you need the input text to be escaped.
+
+  ## Examples
+
+    iex> "example.com" =~ Re.raw("example.com") |> Re.compile()
+    true
+    iex> "examplescom" =~ Re.raw("example.com") |> Re.compile()
+    true
+    iex> "examplscom" =~ Re.raw("example.com") |> Re.compile()
+    false
+
   """
   @spec raw(String.t() | Regex.t()) :: re_ast()
   defmacro raw(expr) do
@@ -230,6 +312,14 @@ defmodule Re do
   @doc """
   Include a text into the resulting pattern.
   All unsafe symbols will be escaped if necessary.
+
+  ## Examples
+
+    iex> "example.com" =~ Re.text("example.com") |> Re.compile()
+    true
+    iex> "examplescom" =~ Re.text("example.com") |> Re.compile()
+    false
+
   """
   @spec text(String.t() | integer()) :: re_ast()
   defmacro text(expr) do
@@ -291,6 +381,14 @@ defmodule Re do
   Match anything except the given symbols.
 
   PCRE: `[^XY]`
+
+  ## Examples
+
+    iex> "a" =~ Re.none_of('abc') |> Re.compile()
+    false
+    iex> "d" =~ Re.none_of('abc') |> Re.compile()
+    true
+
   """
   @spec none_of(list(char())) :: re_ast()
   defmacro none_of(expr) do
