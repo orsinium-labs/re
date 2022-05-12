@@ -202,4 +202,44 @@ defmodule Re.Chars do
   """
   @spec not_word_boundary :: re_ast()
   defmacro not_word_boundary, do: {:re_group, ~S"\B"}
+
+  @doc """
+  Matches letters and digits.
+
+  PCRE: `[[:alnum:]]`.
+  """
+  @spec any_alnum :: re_ast()
+  defmacro any_alnum, do: {:re_group, "[[:alnum:]]"}
+
+  @doc """
+  Matches any letters.
+
+  PCRE: `[[:alpha:]]`.
+  """
+  @spec any_alpha :: re_ast()
+  defmacro any_alpha, do: {:re_group, "[[:alpha:]]"}
+
+  @doc """
+  Matches lowercase letters.
+
+  PCRE: `[[:lower:]]`.
+  """
+  @spec any_lower :: re_ast()
+  defmacro any_lower, do: {:re_group, "[[:lower:]]"}
+
+  @doc """
+  Matches uppercase letters.
+
+  PCRE: `[[:upper:]]`.
+  """
+  @spec any_upper :: re_ast()
+  defmacro any_upper, do: {:re_group, "[[:upper:]]"}
+
+  @doc """
+  Matches hexadecimal digits.
+
+  PCRE: `[[:hex:]]`.
+  """
+  @spec any_hex :: re_ast()
+  defmacro any_hex, do: {:re_group, "[[:xdigit:]]"}
 end

@@ -6,12 +6,14 @@ defmodule Re do
 
   Match subdomains of `example.com`:
 
+    iex> require Re
+    iex> require Re.Chars
     iex> regex =
     ...>   Re.sequence([
-    ...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii(), Re.any_of('.-_')])),
+    ...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii, Re.any_of('.-_')])),
     ...>     Re.text(".example.com")
     ...>   ]) |> Re.compile()
-    ~r/(?:[\\\\0-\\x7f]|[.-_])+\\.example\\.com/
+    ~r/(?:[\\\\0-\\x7f]|\\.|\\-|_)+\\.example\\.com/
     iex> Regex.match?(regex, "hello.example.com")
     true
     iex> Regex.match?(regex, "hello.world.example.com")
@@ -76,7 +78,7 @@ defmodule Re do
             result
 
           result when is_integer(result) ->
-            to_string([result])
+            to_string([result]) |> Regex.escape()
 
           result when is_bitstring(result) ->
             result
@@ -177,9 +179,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> "example.com" =~ Re.text("example.com") |> Re.compile()
+    iex> rex = Re.text("example.com") |> Re.compile()
+    iex> "example.com" =~ rex
     true
-    iex> "examplescom" =~ Re.text("example.com") |> Re.compile()
+    iex> "examplescom" =~ rex
     false
 
   """
@@ -202,6 +205,17 @@ defmodule Re do
   Chain multiple patterns together.
 
   PCRE: `XY`
+
+  ## Examples
+
+    iex> rex = Re.sequence([Re.text("a"), Re.Chars.any_digit]) |> Re.compile
+    iex> "a1" =~ rex
+    true
+    iex> "a" =~ rex
+    false
+    iex> "1" =~ rex
+    false
+
   """
   @spec sequence([re_ast() | String.t()]) :: re_ast()
   defmacro sequence(exprs) do
@@ -220,8 +234,20 @@ defmodule Re do
   Match any of the given patters or symbols.
 
   PCRE: `[XY]` and `X|Y`
+
+  ## Examples
+
+    iex> rex = Re.any_of([Re.text(?a), Re.text(?b)]) |> Re.compile
+    iex> "a" =~ rex
+    true
+    iex> "b" =~ rex
+    true
+    iex> "c" =~ rex
+    false
+    iex> "a" =~ Re.any_of([?a, ?b]) |> Re.compile
+    true
   """
-  @spec any_of([re_ast() | String.t()]) :: re_ast()
+  @spec any_of([re_ast() | String.t() | char()]) :: re_ast()
   defmacro any_of(exprs) do
     exprs = Macro.expand(exprs, __ENV__)
 
@@ -269,6 +295,18 @@ defmodule Re do
   PCRE: `[X-Y]`
 
   ## Examples
+
+    iex> rex = Re.in_range(?a, ?d) |> Re.compile()
+    ~r/[a-d]/
+    iex> "a" =~ rex
+    true
+    iex> "c" =~ rex
+    true
+    iex> "d" =~ rex
+    true
+    iex> "e" =~ rex
+    false
+
   """
   @spec in_range(char(), char()) :: re_ast()
   defmacro in_range(expr1, expr2) do
@@ -364,8 +402,18 @@ defmodule Re do
   Match exactly N repetitions of the pattern.
 
   PCRE: `X{N}`
+
+  ## Examples
+
+    iex(21)> rex = Re.text("ab") |> Re.repeated(2) |> Re.compile
+    ~r/(?:ab){2}/
+    iex(22)> "ab" =~ rex
+    false
+    iex(23)> "abab" =~ rex
+    true
+
   """
-  @spec repeated(any, any) :: re_ast()
+  @spec repeated(re_ast() | String.t(), integer()) :: re_ast()
   defmacro repeated(expr, n) do
     expr = Macro.expand(expr, __ENV__)
     n = Macro.expand(n, __ENV__)
@@ -405,6 +453,13 @@ defmodule Re do
   https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
 
   PCRE: `(X)`
+
+  ## Examples
+
+    iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit)]) |> Re.compile
+    ~r/a(\\d)/
+    iex> Regex.run(rex, "a1", capture: :all_but_first)
+    ["1"]
   """
   @spec capture(any) :: re_ast()
   defmacro capture(expr) do
@@ -425,6 +480,13 @@ defmodule Re do
   https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
 
   PCRE: `(?P<N>X)`
+
+  ## Examples
+
+    iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit, "number")]) |> Re.compile
+    ~r/a(?P<number>\\d)/
+    iex> Regex.named_captures(rex, "a1")
+    %{"number" => "1"}
   """
   @spec capture(any, any) :: re_ast()
   defmacro capture(expr, name) do
@@ -450,6 +512,24 @@ defmodule Re do
   https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
 
   PCRE: `X?`
+
+  ## Examples
+
+    iex> rex = Re.sequence([
+    ...>  Re.text(?a),
+    ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.capture
+    ...> ]) |> Re.compile()
+    ~r/a(\\d+)/
+    iex> Regex.run(rex, "a111", capture: :all_but_first)
+    ["111"]
+    iex> rex = Re.sequence([
+    ...>  Re.text(?a),
+    ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.lazy |> Re.capture
+    ...> ]) |> Re.compile()
+    ~r/a(\\d+?)/
+    iex> Regex.run(rex, "a111", capture: :all_but_first)
+    ["1"]
+
   """
   @spec lazy(re_ast()) :: re_ast()
   defmacro lazy(expr) do
