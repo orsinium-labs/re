@@ -49,7 +49,7 @@ defmodule Re do
 
   # Internal macros that evaluates quoted expression if all params are static literals.
   defmacrop eager(params, do: block) do
-    quote do
+    quote generated: true do
       if Macro.quoted_literal?(unquote(params)) do
         {term, _} = unquote(block) |> Code.eval_quoted()
         Macro.escape(term)
@@ -74,7 +74,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         case unquote(expr) do
           {t, result} when is_atom(t) ->
             result
@@ -108,7 +108,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         unquote(expr) |> Re.to_string() |> Regex.compile!(unquote(options))
       end
@@ -133,7 +133,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         case unquote(expr) do
           {:re_expr, val} -> {:re_group, "(?:#{val})"}
           {:re_group, val} = expr -> expr
@@ -166,7 +166,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         case unquote(expr) do
           %Regex{} = val -> {:re_expr, Regex.source(val)}
           val -> {:re_expr, val}
@@ -193,7 +193,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         case unquote(expr) do
           val when is_integer(val) -> {:re_group, Regex.escape(to_string([val]))}
           val when byte_size(val) == 1 -> {:re_group, Regex.escape(val)}
@@ -224,7 +224,7 @@ defmodule Re do
     exprs = exprs |> Enum.map(&Macro.expand(&1, __ENV__))
 
     eager exprs do
-      quote do
+      quote generated: true do
         require Re
         result = unquote(exprs) |> Enum.map(&Re.to_string/1) |> Enum.join()
         {:re_expr, result}
@@ -254,7 +254,7 @@ defmodule Re do
     exprs = exprs |> Enum.map(&Macro.expand(&1, __ENV__))
 
     eager exprs do
-      quote do
+      quote generated: true do
         require Re
         strings = unquote(exprs) |> Enum.map(&Re.to_string/1)
 
@@ -285,7 +285,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         {:re_group, "[^#{unquote(expr)}]"}
       end
     end
@@ -344,7 +344,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, value} = Re.group(unquote(expr))
         {:re_group, "#{value}*"}
@@ -374,7 +374,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, value} = Re.group(unquote(expr))
         {:re_group, "#{value}+"}
@@ -392,7 +392,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, value} = Re.group(unquote(expr))
         {:re_group, "#{value}?"}
@@ -421,7 +421,7 @@ defmodule Re do
     n = Macro.expand(n, __ENV__)
 
     eager [expr, n] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, val} = unquote(expr) |> Re.group()
         {:re_group, "#{val}{#{unquote(n)}}"}
@@ -441,7 +441,7 @@ defmodule Re do
     at_most = Macro.expand(at_most, __ENV__)
 
     eager [expr, at_least, at_most] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, val} = unquote(expr) |> Re.group()
         {:re_group, "#{val}{#{unquote(at_least)},#{unquote(at_most)}}"}
@@ -468,7 +468,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         val = unquote(expr) |> Re.to_string()
         {:re_group, "(#{val})"}
@@ -496,7 +496,7 @@ defmodule Re do
     name = Macro.expand(name, __ENV__)
 
     eager [expr, name] do
-      quote do
+      quote generated: true do
         require Re
         val = unquote(expr) |> Re.to_string()
         {:re_group, "(?P<#{unquote(name)}>#{val})"}
@@ -538,7 +538,7 @@ defmodule Re do
     expr = Macro.expand(expr, __ENV__)
 
     eager [expr] do
-      quote do
+      quote generated: true do
         require Re
         {:re_group, value} = unquote(expr)
         {:re_group, "#{value}?"}
