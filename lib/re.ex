@@ -511,8 +511,6 @@ defmodule Re do
   This function reverts this behavior for the given pattern,
   making it match as less as possible.
 
-  https://hexdocs.pm/elixir/1.13/Regex.html#module-captures
-
   PCRE: `X?`
 
   ## Examples
