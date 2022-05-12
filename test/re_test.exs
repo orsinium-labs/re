@@ -1,4 +1,5 @@
 defmodule ReTest do
+  require Re.Chars
   use ExUnit.Case
   doctest Re
 
@@ -60,7 +61,14 @@ defmodule ReTest do
 
   describe "in_range" do
     test "explict strings" do
-      assert Re.in_range("a", "z") |> Re.to_string() == "a-z"
+      assert Re.in_range("a", "z") |> Re.to_string() == "[a-z]"
+      assert Re.in_range('a', 'z') |> Re.to_string() == "[a-z]"
+      assert Re.in_range(?a, ?z) |> Re.to_string() == "[a-z]"
+    end
+
+    test "explict string is statically expanded" do
+      ast = quote do: Re.in_range("a", "z") |> Re.to_string()
+      assert Macro.expand(ast, __ENV__) == "[a-z]"
     end
   end
 

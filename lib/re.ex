@@ -8,7 +8,7 @@ defmodule Re do
 
     iex> regex =
     ...>   Re.sequence([
-    ...>     Re.one_or_more(Re.any_of([Re.any_ascii(), Re.any_of('.-_')])),
+    ...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii(), Re.any_of('.-_')])),
     ...>     Re.text(".example.com")
     ...>   ]) |> Re.compile()
     ~r/(?:[\\\\0-\\x7f]|[.-_])+\\.example\\.com/
@@ -60,9 +60,9 @@ defmodule Re do
 
   ## Examples
 
-    iex> Re.to_string(Re.any_digit)
+    iex> Re.to_string(Re.Chars.any_digit)
     "\\\\d"
-    iex> Re.to_string(Re.any_ascii)
+    iex> Re.to_string(Re.Chars.any_ascii)
     "[\\\\\\\\0-\\\\x7f]"
   """
   @spec to_string(re_ast() | String.t() | char()) :: String.t()
@@ -94,9 +94,9 @@ defmodule Re do
 
   ## Examples
 
-    iex> "1" =~ Re.compile(Re.any_digit)
+    iex> "1" =~ Re.compile(Re.Chars.any_digit)
     true
-    iex> "a" =~ Re.compile(Re.any_digit)
+    iex> "a" =~ Re.compile(Re.Chars.any_digit)
     false
   """
   @spec compile(re_ast() | String.t(), binary() | [term()]) :: any()
@@ -140,144 +140,6 @@ defmodule Re do
       end
     end
   end
-
-  @doc """
-  Match the beginning of each line.
-
-  PCRE: `^`
-  """
-  @spec beginning_of_line :: re_ast()
-  defmacro beginning_of_line, do: {:re_group, "^"}
-
-  @doc """
-  Match the end of each line.
-
-  PCRE: `$`
-  """
-  @spec end_of_line :: re_ast()
-  defmacro end_of_line, do: {:re_group, "$"}
-
-  @doc """
-  Match the beginning of the whole string.
-
-  PCRE: `\\A`
-  """
-  @spec beginning_of_string :: re_ast()
-  defmacro beginning_of_string, do: {:re_group, "\A"}
-
-  @doc """
-  Match the end of the whole string.
-
-  PCRE: `\\z`
-  """
-  @spec end_of_string :: re_ast()
-  defmacro end_of_string, do: {:re_group, "\z"}
-
-  @doc """
-  Match any symbol.
-
-  PCRE: `.`
-
-  ## Examples
-
-    iex> "a" =~ Re.compile(Re.anything)
-    true
-    iex> "?" =~ Re.compile(Re.anything)
-    true
-
-  """
-  @spec anything :: re_ast()
-  defmacro anything, do: {:re_group, "."}
-
-  @doc """
-  Match only space and nothing else.
-
-  PCRE: ` `.
-  """
-  @spec space :: re_ast()
-  defmacro space, do: {:re_group, " "}
-
-  @doc """
-  Match the tab symbol and nothing else.
-
-  PCRE: `\\t`.
-  """
-  @spec tab :: re_ast()
-  defmacro tab, do: {:re_group, ~S"\t"}
-
-  @doc """
-  Match decimal digit.
-
-  PCRE: `\\d`.
-  """
-  @spec any_digit :: re_ast()
-  defmacro any_digit, do: {:re_group, ~S"\d"}
-
-  @doc """
-  Match any symbol except digit.
-
-  PCRE: `\\D`.
-  """
-  @spec not_digit :: re_ast()
-  defmacro not_digit, do: {:re_group, ~S"\D"}
-
-  @doc """
-  Match any whitespace symbol like space, tab, unicode spaces etc.
-
-  PCRE: `\\s`.
-  """
-  @spec any_space :: re_ast()
-  defmacro any_space, do: {:re_group, ~S"\s"}
-
-  @doc """
-  Match any symbol except whitespace symbols.
-
-  PCRE: `\\S`.
-  """
-  @spec not_space :: re_ast()
-  defmacro not_space, do: {:re_group, ~S"\S"}
-
-  @doc """
-  Match any word symbol like letters, numbers etc.
-
-  PCRE: `\\w`.
-  """
-  @spec any_word :: re_ast()
-  defmacro any_word, do: {:re_group, ~S"\w"}
-
-  @doc """
-  Match any symbol except word symbols (letters, numbers etc).
-
-  PCRE: `\\W`.
-  """
-  @spec not_word :: re_ast()
-  defmacro not_word, do: {:re_group, ~S"\W"}
-
-  @doc """
-  Match any ASCII symbol (code points from 0 to 127).
-
-  PCRE: `[\\\\0-\\x7f]`.
-
-  ## Examples
-
-    iex> "a" =~ Re.compile(Re.any_ascii)
-    true
-    iex> "\\x50" =~ Re.compile(Re.any_ascii)
-    true
-    iex> "\\x90" =~ Re.compile(Re.any_ascii)
-    false
-
-  """
-  @spec any_ascii :: re_ast()
-  defmacro any_ascii, do: {:re_group, ~S"[\\0-\x7f]"}
-
-  @doc """
-  Match any Latin-1 symbol (code points from 0 to 255).
-
-  PCRE: `[\\\\0-\\xff]`.
-  """
-  @spec any_latin1 :: re_ast()
-  defmacro any_latin1, do: {:re_group, ~S"[\\0-\xff]"}
 
   @doc """
   Include a raw regex as is into the resulting pattern.
@@ -404,7 +266,9 @@ defmodule Re do
   @doc """
   Match any symbol in the given range.
 
-  PCRE: `X-Y`
+  PCRE: `[X-Y]`
+
+  ## Examples
   """
   @spec in_range(char(), char()) :: re_ast()
   defmacro in_range(expr1, expr2) do
@@ -412,8 +276,20 @@ defmodule Re do
     expr2 = Macro.expand(expr2, __ENV__)
 
     eager [expr1, expr2] do
-      quote do
-        {:re_expr, "#{unquote(expr1)}-#{unquote(expr2)}"}
+      quote bind_quoted: [expr1: expr1, expr2: expr2] do
+        val1 =
+          cond do
+            is_integer(expr1) -> to_string([expr1])
+            true -> expr1
+          end
+
+        val2 =
+          cond do
+            is_integer(expr2) -> to_string([expr2])
+            true -> expr2
+          end
+
+        {:re_expr, "[#{val1}-#{val2}]"}
       end
     end
   end
@@ -440,6 +316,18 @@ defmodule Re do
   Match one or more repetitions of the pattern.
 
   PCRE: `X+`
+
+  ## Examples
+
+    iex> "a" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+    true
+    iex> "aaa" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+    true
+    iex> "b" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+    false
+    iex> "" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+    false
+
   """
   @spec one_or_more(any) :: re_ast()
   defmacro one_or_more(expr) do
