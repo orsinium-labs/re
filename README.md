@@ -1,11 +1,19 @@
 # Re
 
-**TODO: Add description**
+Elixir library for writing regular expressions in functional style.
+
+Features:
+
+* Readable and human-friendly.
+* Less error-prone.
+* 100% compile-time, no overhead in runtime.
+* But will fallback to runtime if needed (if you use dynamic content like variables).
+* Well documented with lots of examples.
+* Optimized and readable output.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `re` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `re` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -15,7 +23,19 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/re>.
+## Usage
 
+```elixir
+iex> require Re
+iex> require Re.Chars
+iex> regex =
+...>   Re.sequence([
+...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii, Re.any_of('.-_')])),
+...>     Re.text(".example.com")
+...>   ]) |> Re.compile()
+~r/(?:[\\0-\x7f]|\.|\-|_)+\.example\.com/
+iex> "hello.example.com" =~ regex
+true
+```
+
+**Documentation**: [hexdocs.pm/re/](https://hexdocs.pm/re/Re.html)

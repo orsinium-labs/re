@@ -14,11 +14,11 @@ defmodule Re do
     ...>     Re.text(".example.com")
     ...>   ]) |> Re.compile()
     ~r/(?:[\\\\0-\\x7f]|\\.|\\-|_)+\\.example\\.com/
-    iex> Regex.match?(regex, "hello.example.com")
+    iex> "hello.example.com" =~ regex
     true
-    iex> Regex.match?(regex, "hello.world.example.com")
+    iex> "hello.world.example.com" =~ regex
     true
-    iex> Regex.match?(regex, "hello.orsinium.dev")
+    iex> "hello.orsinium.dev" =~ regex
     false
 
   """
