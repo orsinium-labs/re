@@ -226,7 +226,7 @@ defmodule Re do
     eager exprs do
       quote generated: true do
         require Re
-        result = unquote(exprs) |> Enum.map(&Re.to_string/1) |> Enum.join()
+        result = unquote(exprs) |> Enum.map_join(&Re.to_string/1)
         {:re_expr, result}
       end
     end
@@ -318,15 +318,17 @@ defmodule Re do
     eager [expr1, expr2] do
       quote bind_quoted: [expr1: expr1, expr2: expr2] do
         val1 =
-          cond do
-            is_integer(expr1) -> to_string([expr1])
-            true -> expr1
+          if is_integer(expr1) do
+            to_string([expr1])
+          else
+            expr1
           end
 
         val2 =
-          cond do
-            is_integer(expr2) -> to_string([expr2])
-            true -> expr2
+          if is_integer(expr2) do
+            to_string([expr2])
+          else
+            expr2
           end
 
         {:re_expr, "[#{val1}-#{val2}]"}

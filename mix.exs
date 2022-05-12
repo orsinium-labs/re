@@ -1,10 +1,11 @@
 defmodule Re.MixProject do
+  @moduledoc false
   use Mix.Project
 
   def project do
     [
       app: :re,
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       description: "Write readable regular expressions in functional style.",
@@ -33,7 +34,8 @@ defmodule Re.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:credo, ">= 1.6.0", only: :dev, runtime: false}
     ]
   end
 end
