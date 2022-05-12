@@ -52,10 +52,10 @@ defmodule Re.Chars do
 
   ## Examples
 
-    iex> "a" =~ Re.compile(Re.Chars.anything)
-    true
-    iex> "?" =~ Re.compile(Re.Chars.anything)
-    true
+      iex> "a" =~ Re.compile(Re.Chars.anything)
+      true
+      iex> "?" =~ Re.compile(Re.Chars.anything)
+      true
 
   """
   @spec anything :: re_ast()

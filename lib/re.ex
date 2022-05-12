@@ -6,20 +6,20 @@ defmodule Re do
 
   Match subdomains of `example.com`:
 
-    iex> require Re
-    iex> require Re.Chars
-    iex> regex =
-    ...>   Re.sequence([
-    ...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii, Re.any_of('.-_')])),
-    ...>     Re.text(".example.com")
-    ...>   ]) |> Re.compile()
-    ~r/(?:[\\\\0-\\x7f]|\\.|\\-|_)+\\.example\\.com/
-    iex> "hello.example.com" =~ regex
-    true
-    iex> "hello.world.example.com" =~ regex
-    true
-    iex> "hello.orsinium.dev" =~ regex
-    false
+      iex> require Re
+      iex> require Re.Chars
+      iex> regex =
+      ...>   Re.sequence([
+      ...>     Re.one_or_more(Re.any_of([Re.Chars.any_ascii, Re.any_of('.-_')])),
+      ...>     Re.text(".example.com")
+      ...>   ]) |> Re.compile()
+      ~r/(?:[\\\\0-\\x7f]|\\.|\\-|_)+\\.example\\.com/
+      iex> "hello.example.com" =~ regex
+      true
+      iex> "hello.world.example.com" =~ regex
+      true
+      iex> "hello.orsinium.dev" =~ regex
+      false
 
   """
 
@@ -35,12 +35,12 @@ defmodule Re do
 
   ## Examples
 
-      iex> Re.is_re(Re.text("hello"))
-      true
-      iex> Re.is_re("something else")
-      false
-      iex> Re.is_re(~r"hi")
-      false
+        iex> Re.is_re(Re.text("hello"))
+        true
+        iex> Re.is_re("something else")
+        false
+        iex> Re.is_re(~r"hi")
+        false
   """
   @spec is_re(any) :: any
   defguard is_re(v)
@@ -64,10 +64,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> Re.to_string(Re.Chars.any_digit)
-    "\\\\d"
-    iex> Re.to_string(Re.Chars.any_ascii)
-    "[\\\\\\\\0-\\\\x7f]"
+      iex> Re.to_string(Re.Chars.any_digit)
+      "\\\\d"
+      iex> Re.to_string(Re.Chars.any_ascii)
+      "[\\\\\\\\0-\\\\x7f]"
   """
   @spec to_string(re_ast() | String.t() | char()) :: String.t()
   defmacro to_string(expr) do
@@ -98,10 +98,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> "1" =~ Re.compile(Re.Chars.any_digit)
-    true
-    iex> "a" =~ Re.compile(Re.Chars.any_digit)
-    false
+      iex> "1" =~ Re.compile(Re.Chars.any_digit)
+      true
+      iex> "a" =~ Re.compile(Re.Chars.any_digit)
+      false
   """
   @spec compile(re_ast() | String.t(), binary() | [term()]) :: any()
   defmacro compile(expr, options \\ "") do
@@ -125,8 +125,8 @@ defmodule Re do
 
   ## Examples
 
-    iex> 'abc' |> Re.raw |> Re.group |> Re.to_string
-    "(?:abc)"
+      iex> 'abc' |> Re.raw |> Re.group |> Re.to_string
+      "(?:abc)"
   """
   @spec group(re_ast() | String.t()) :: re_ast()
   defmacro group(expr) do
@@ -153,12 +153,12 @@ defmodule Re do
 
   ## Examples
 
-    iex> "example.com" =~ Re.raw("example.com") |> Re.compile()
-    true
-    iex> "examplescom" =~ Re.raw("example.com") |> Re.compile()
-    true
-    iex> "examplscom" =~ Re.raw("example.com") |> Re.compile()
-    false
+      iex> "example.com" =~ Re.raw("example.com") |> Re.compile()
+      true
+      iex> "examplescom" =~ Re.raw("example.com") |> Re.compile()
+      true
+      iex> "examplscom" =~ Re.raw("example.com") |> Re.compile()
+      false
 
   """
   @spec raw(String.t() | Regex.t()) :: re_ast()
@@ -181,11 +181,11 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.text("example.com") |> Re.compile()
-    iex> "example.com" =~ rex
-    true
-    iex> "examplescom" =~ rex
-    false
+      iex> rex = Re.text("example.com") |> Re.compile()
+      iex> "example.com" =~ rex
+      true
+      iex> "examplescom" =~ rex
+      false
 
   """
   @spec text(String.t() | integer()) :: re_ast()
@@ -210,13 +210,13 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.sequence([Re.text("a"), Re.Chars.any_digit]) |> Re.compile
-    iex> "a1" =~ rex
-    true
-    iex> "a" =~ rex
-    false
-    iex> "1" =~ rex
-    false
+      iex> rex = Re.sequence([Re.text("a"), Re.Chars.any_digit]) |> Re.compile
+      iex> "a1" =~ rex
+      true
+      iex> "a" =~ rex
+      false
+      iex> "1" =~ rex
+      false
 
   """
   @spec sequence([re_ast() | String.t()]) :: re_ast()
@@ -239,15 +239,15 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.any_of([Re.text(?a), Re.text(?b)]) |> Re.compile
-    iex> "a" =~ rex
-    true
-    iex> "b" =~ rex
-    true
-    iex> "c" =~ rex
-    false
-    iex> "a" =~ Re.any_of([?a, ?b]) |> Re.compile
-    true
+      iex> rex = Re.any_of([Re.text(?a), Re.text(?b)]) |> Re.compile
+      iex> "a" =~ rex
+      true
+      iex> "b" =~ rex
+      true
+      iex> "c" =~ rex
+      false
+      iex> "a" =~ Re.any_of([?a, ?b]) |> Re.compile
+      true
   """
   @spec any_of([re_ast() | String.t() | char()]) :: re_ast()
   defmacro any_of(exprs) do
@@ -274,10 +274,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> "a" =~ Re.none_of('abc') |> Re.compile()
-    false
-    iex> "d" =~ Re.none_of('abc') |> Re.compile()
-    true
+      iex> "a" =~ Re.none_of('abc') |> Re.compile()
+      false
+      iex> "d" =~ Re.none_of('abc') |> Re.compile()
+      true
 
   """
   @spec none_of(list(char())) :: re_ast()
@@ -298,16 +298,16 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.in_range(?a, ?d) |> Re.compile()
-    ~r/[a-d]/
-    iex> "a" =~ rex
-    true
-    iex> "c" =~ rex
-    true
-    iex> "d" =~ rex
-    true
-    iex> "e" =~ rex
-    false
+      iex> rex = Re.in_range(?a, ?d) |> Re.compile()
+      ~r/[a-d]/
+      iex> "a" =~ rex
+      true
+      iex> "c" =~ rex
+      true
+      iex> "d" =~ rex
+      true
+      iex> "e" =~ rex
+      false
 
   """
   @spec in_range(char(), char()) :: re_ast()
@@ -359,14 +359,14 @@ defmodule Re do
 
   ## Examples
 
-    iex> "a" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
-    true
-    iex> "aaa" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
-    true
-    iex> "b" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
-    false
-    iex> "" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
-    false
+      iex> "a" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+      true
+      iex> "aaa" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+      true
+      iex> "b" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+      false
+      iex> "" =~ "a" |> Re.text |> Re.one_or_more |> Re.compile()
+      false
 
   """
   @spec one_or_more(any) :: re_ast()
@@ -407,12 +407,12 @@ defmodule Re do
 
   ## Examples
 
-    iex(21)> rex = Re.text("ab") |> Re.repeated(2) |> Re.compile
-    ~r/(?:ab){2}/
-    iex(22)> "ab" =~ rex
-    false
-    iex(23)> "abab" =~ rex
-    true
+      iex> rex = Re.text("ab") |> Re.repeated(2) |> Re.compile
+      ~r/(?:ab){2}/
+      iex> "ab" =~ rex
+      false
+      iex> "abab" =~ rex
+      true
 
   """
   @spec repeated(re_ast() | String.t(), integer()) :: re_ast()
@@ -458,10 +458,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit)]) |> Re.compile
-    ~r/a(\\d)/
-    iex> Regex.run(rex, "a1", capture: :all_but_first)
-    ["1"]
+      iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit)]) |> Re.compile
+      ~r/a(\\d)/
+      iex> Regex.run(rex, "a1", capture: :all_but_first)
+      ["1"]
   """
   @spec capture(any) :: re_ast()
   defmacro capture(expr) do
@@ -485,10 +485,10 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit, "number")]) |> Re.compile
-    ~r/a(?P<number>\\d)/
-    iex> Regex.named_captures(rex, "a1")
-    %{"number" => "1"}
+      iex> rex = Re.sequence([Re.text(?a), Re.capture(Re.Chars.any_digit, "number")]) |> Re.compile
+      ~r/a(?P<number>\\d)/
+      iex> Regex.named_captures(rex, "a1")
+      %{"number" => "1"}
   """
   @spec capture(any, any) :: re_ast()
   defmacro capture(expr, name) do
@@ -517,20 +517,20 @@ defmodule Re do
 
   ## Examples
 
-    iex> rex = Re.sequence([
-    ...>  Re.text(?a),
-    ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.capture
-    ...> ]) |> Re.compile()
-    ~r/a(\\d+)/
-    iex> Regex.run(rex, "a111", capture: :all_but_first)
-    ["111"]
-    iex> rex = Re.sequence([
-    ...>  Re.text(?a),
-    ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.lazy |> Re.capture
-    ...> ]) |> Re.compile()
-    ~r/a(\\d+?)/
-    iex> Regex.run(rex, "a111", capture: :all_but_first)
-    ["1"]
+      iex> rex = Re.sequence([
+      ...>  Re.text(?a),
+      ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.capture
+      ...> ]) |> Re.compile()
+      ~r/a(\\d+)/
+      iex> Regex.run(rex, "a111", capture: :all_but_first)
+      ["111"]
+      iex> rex = Re.sequence([
+      ...>  Re.text(?a),
+      ...>  Re.Chars.any_digit |> Re.one_or_more() |> Re.lazy |> Re.capture
+      ...> ]) |> Re.compile()
+      ~r/a(\\d+?)/
+      iex> Regex.run(rex, "a111", capture: :all_but_first)
+      ["1"]
 
   """
   @spec lazy(re_ast()) :: re_ast()
