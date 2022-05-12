@@ -52,9 +52,9 @@ defmodule Re.Chars do
 
   ## Examples
 
-    iex> "a" =~ Re.compile(Re.anything)
+    iex> "a" =~ Re.compile(Re.Chars.anything)
     true
-    iex> "?" =~ Re.compile(Re.anything)
+    iex> "?" =~ Re.compile(Re.Chars.anything)
     true
 
   """

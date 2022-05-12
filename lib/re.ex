@@ -23,6 +23,8 @@ defmodule Re do
 
   """
 
+  require Re.Chars
+
   @typedoc """
   internal Re representation of regular expressions.
   """
@@ -219,7 +221,7 @@ defmodule Re do
   """
   @spec sequence([re_ast() | String.t()]) :: re_ast()
   defmacro sequence(exprs) do
-    exprs = Macro.expand(exprs, __ENV__)
+    exprs = exprs |> Enum.map(&Macro.expand(&1, __ENV__))
 
     eager exprs do
       quote do
@@ -249,7 +251,7 @@ defmodule Re do
   """
   @spec any_of([re_ast() | String.t() | char()]) :: re_ast()
   defmacro any_of(exprs) do
-    exprs = Macro.expand(exprs, __ENV__)
+    exprs = exprs |> Enum.map(&Macro.expand(&1, __ENV__))
 
     eager exprs do
       quote do
