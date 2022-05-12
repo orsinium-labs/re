@@ -164,12 +164,12 @@ defmodule Re.Chars do
 
   ## Examples
 
-    iex> "a" =~ Re.compile(Re.Chars.any_ascii)
-    true
-    iex> "\\x50" =~ Re.compile(Re.Chars.any_ascii)
-    true
-    iex> "\\x90" =~ Re.compile(Re.Chars.any_ascii)
-    false
+      iex> "a" =~ Re.compile(Re.Chars.any_ascii)
+      true
+      iex> "\\x50" =~ Re.compile(Re.Chars.any_ascii)
+      true
+      iex> "\\x90" =~ Re.compile(Re.Chars.any_ascii)
+      false
 
   """
   @spec any_ascii :: re_ast()
