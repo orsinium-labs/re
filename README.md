@@ -18,7 +18,7 @@ The package can be installed by adding `re` to your list of dependencies in `mix
 ```elixir
 def deps do
   [
-    {:re, "~> 0.1.0"}
+    {:re, ">= 1.0.0"}
   ]
 end
 ```
