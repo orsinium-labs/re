@@ -42,6 +42,7 @@ defmodule Re do
         iex> Re.is_re(~r"hi")
         false
   """
+  @doc guard: true
   @spec is_re(any) :: any
   defguard is_re(v)
            when is_tuple(v) and tuple_size(v) == 2 and

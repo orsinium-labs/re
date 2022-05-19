@@ -11,6 +11,7 @@ defmodule Re.MixProject do
       description: "Write readable regular expressions in functional style.",
       source_url: "https://github.com/orsinium-labs/re",
       homepage_url: "https://github.com/orsinium-labs/re",
+      docs: [source_ref: "master"],
       package: package(),
       deps: deps()
     ]
